@@ -8,8 +8,12 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // ⭐ New state
 
   const handleSignup = async () => {
+    setError("");
+    setSuccess("");
+
     if (!email || !password) {
       setError("All fields are required");
       return;
@@ -17,7 +21,12 @@ const Signup = () => {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard");
+      setSuccess("🎉 Signup successful! You can now login.");
+
+      // Optional: Redirect after 2 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       setError(err.message);
     }
@@ -53,7 +62,6 @@ const Signup = () => {
         Sign Up
       </button>
 
-      {/* 🚀 Login redirect link added */}
       <p
         style={{
           cursor: "pointer",
@@ -66,7 +74,11 @@ const Signup = () => {
         Already have an account? Login
       </p>
 
+      {/* Error Message */}
       {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {/* Success Message */}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
 };
