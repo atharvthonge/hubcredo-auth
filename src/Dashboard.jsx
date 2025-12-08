@@ -9,12 +9,13 @@ const Dashboard = () => {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    // 🔥 This listens for real-time auth updates (fixes "Guest" issue)
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         navigate("/login");
       } else {
-        const name = user.displayName?.split(" ")[0] || "User";
+        // ✅ FIX: Extract only FIRST name
+        const name = user.displayName ? user.displayName.split(" ")[0] : "User";
+
         setFirstName(name);
 
         setTimeout(() => setFade(true), 200);

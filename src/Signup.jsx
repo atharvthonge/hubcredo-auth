@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "./firebase";
 import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState(""); // now after email
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -21,14 +21,22 @@ const Signup = () => {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password.trim()
+      );
 
-      setSuccess("🎉 Signup successful! You can now login.");
+      await updateProfile(userCredential.user, {
+        displayName: name.trim(),
+      });
 
-      // Redirect after 2sec
+      await auth.currentUser.reload();
+
+      setSuccess("🎉 Account created successfully! Redirecting...");
+
       setTimeout(() => navigate("/login"), 2000);
 
-      // Clear input values
       setEmail("");
       setName("");
       setPassword("");
@@ -41,7 +49,6 @@ const Signup = () => {
     <div style={{ margin: "100px auto", width: "300px", textAlign: "center" }}>
       <h2>Create Account</h2>
 
-      {/* Email FIRST */}
       <input
         type="email"
         placeholder="Email"
@@ -50,7 +57,6 @@ const Signup = () => {
         style={{ width: "100%", padding: "10px", margin: "10px" }}
       />
 
-      {/* Name SECOND */}
       <input
         type="text"
         placeholder="Full Name"
@@ -59,7 +65,6 @@ const Signup = () => {
         style={{ width: "100%", padding: "10px", margin: "10px" }}
       />
 
-      {/* Password THIRD */}
       <input
         type="password"
         placeholder="Password"
@@ -82,19 +87,21 @@ const Signup = () => {
       </button>
 
       <p
+        onClick={() => navigate("/login")}
         style={{
           cursor: "pointer",
           color: "blue",
           marginTop: "15px",
           textDecoration: "underline",
         }}
-        onClick={() => navigate("/login")}
       >
         Already have an account? Login
       </p>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
+      {success && (
+        <p style={{ color: "green", fontWeight: "bold" }}>{success}</p>
+      )}
     </div>
   );
 };
