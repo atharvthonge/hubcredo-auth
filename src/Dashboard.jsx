@@ -1,28 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { auth } from "./firebase";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  const user = auth.currentUser;
-
-  // Safely extract the first name, defaulting to "Guest" if user/displayName is null
-  const firstName = user?.displayName?.split(" ")[0] || "Guest";
-
+  const [firstName, setFirstName] = useState("Loading...");
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    // 1. Safety check: Redirect if user is null (not logged in)
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    // 🔥 This listens for real-time auth updates (fixes "Guest" issue)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigate("/login");
+      } else {
+        const name = user.displayName?.split(" ")[0] || "User";
+        setFirstName(name);
 
-    // 2. Start the fade-in animation
-    setTimeout(() => setFade(true), 100);
-  }, [user, navigate]);
+        setTimeout(() => setFade(true), 200);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleLogout = () => {
     signOut(auth)
@@ -30,56 +30,41 @@ const Dashboard = () => {
       .catch((err) => console.error("Logout Error:", err));
   };
 
-  // If the user is not logged in, render nothing while redirecting
-  if (!user) {
-    return null;
-  }
-
-  // --- UPDATED STYLES OBJECTS ---
   const styles = {
     container: {
+      textAlign: "center",
+      minHeight: "100vh",
+      background: "#1A1A1A",
+      color: "white",
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",
       alignItems: "center",
-      minHeight: "100vh",
-      // ⭐️ CHANGED BACKGROUND COLOR HERE
-      backgroundColor: "#1A1A1A", // Dark Gray (less intense than pure black)
-      color: "white",
-      padding: "20px",
-      transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
       opacity: fade ? 1 : 0,
-      transform: fade ? "translateY(0)" : "translateY(30px)",
+      transform: fade ? "translateY(0)" : "translateY(20px)",
+      transition: "all 1s ease",
     },
     heading: {
-      fontSize: "clamp(30px, 5vw, 60px)",
-      fontWeight: "900",
-      marginBottom: "30px",
+      fontSize: "50px",
+      fontWeight: "bold",
+      marginBottom: "20px",
     },
     nameSpan: {
-      color: "#FF6347", // Tomato Red (a slightly brighter red)
-      textShadow: "0px 0px 15px rgba(255, 99, 71, 0.8)",
+      color: "red",
+      textShadow: "0px 0px 10px rgba(255,0,0,0.7)",
     },
-    logoutButton: {
+    button: {
+      marginTop: "20px",
       padding: "12px 30px",
-      background: "#FF6347",
+      background: "red",
+      border: "none",
       color: "white",
-      border: "2px solid #FF6347",
-      borderRadius: "50px",
       cursor: "pointer",
+      borderRadius: "30px",
       fontSize: "18px",
-      fontWeight: "bold",
-      letterSpacing: "0.5px",
-      boxShadow: "0 4px 15px rgba(255, 99, 71, 0.4)",
-      transition: "all 0.3s ease",
-    },
-    buttonHover: {
-      transform: "scale(1.05)",
-      boxShadow: "0 6px 20px rgba(255, 99, 71, 0.6)",
-      background: "#E55337", // Darker shade on hover
+      transition: "0.3s",
     },
   };
-  // ------------------------------------------------------------------
 
   return (
     <div style={styles.container}>
@@ -88,15 +73,10 @@ const Dashboard = () => {
       </h1>
 
       <button
+        style={styles.button}
         onClick={handleLogout}
-        style={styles.logoutButton}
-        // Applying hover effects directly via onMouseEnter/onMouseLeave
-        onMouseEnter={(e) => {
-          Object.assign(e.target.style, styles.buttonHover);
-        }}
-        onMouseLeave={(e) => {
-          Object.assign(e.target.style, styles.logoutButton);
-        }}
+        onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
+        onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
       >
         Logout 🚪
       </button>
