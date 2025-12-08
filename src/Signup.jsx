@@ -6,27 +6,32 @@ import { useNavigate } from "react-router-dom";
 const Signup = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState(""); // now after email
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // ⭐ New state
+  const [success, setSuccess] = useState("");
 
   const handleSignup = async () => {
     setError("");
     setSuccess("");
 
-    if (!email || !password) {
+    if (!email || !name || !password) {
       setError("All fields are required");
       return;
     }
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+
       setSuccess("🎉 Signup successful! You can now login.");
 
-      // Optional: Redirect after 2 seconds
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      // Redirect after 2sec
+      setTimeout(() => navigate("/login"), 2000);
+
+      // Clear input values
+      setEmail("");
+      setName("");
+      setPassword("");
     } catch (err) {
       setError(err.message);
     }
@@ -36,16 +41,29 @@ const Signup = () => {
     <div style={{ margin: "100px auto", width: "300px", textAlign: "center" }}>
       <h2>Create Account</h2>
 
+      {/* Email FIRST */}
       <input
         type="email"
         placeholder="Email"
+        value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{ width: "100%", padding: "10px", margin: "10px" }}
       />
 
+      {/* Name SECOND */}
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        style={{ width: "100%", padding: "10px", margin: "10px" }}
+      />
+
+      {/* Password THIRD */}
       <input
         type="password"
         placeholder="Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
         style={{ width: "100%", padding: "10px", margin: "10px" }}
       />
@@ -57,6 +75,7 @@ const Signup = () => {
           padding: "10px",
           background: "green",
           color: "white",
+          cursor: "pointer",
         }}
       >
         Sign Up
@@ -74,10 +93,7 @@ const Signup = () => {
         Already have an account? Login
       </p>
 
-      {/* Error Message */}
       {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {/* Success Message */}
       {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
